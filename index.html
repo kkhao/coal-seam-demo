@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>4-2 合成煤层演示</title>
+<style>
+:root {
+  --bg: #e7e1d6;
+  --paper: #f6f3ec;
+  --ink: #1c1915;
+  --muted: #6d645a;
+  --line: #ddd4c6;
+  --coal: #241c16;
+  --coal-2: #3a3128;
+  --brass: #a56b3c;
+  --cream: #f3ead8;
+  --rust: #8c3b22;
+  --amber: #9a6230;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; color: var(--ink); background: var(--bg); font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+.app { display: grid; grid-template-columns: 228px 1fr; min-height: 100vh; }
+nav { position: sticky; top: 0; height: 100vh; padding: 28px 22px; background: var(--coal); color: #f3ead8; }
+.mark { font-size: 12px; letter-spacing: 0.14em; color: #c8b8a2; }
+nav h1 { font-size: 22px; font-weight: 600; line-height: 1.35; margin: 14px 0 22px; }
+nav a { display: block; color: #d9cbb8; text-decoration: none; padding: 9px 0; border-top: 1px solid #3d342b; font-size: 14px; }
+nav a.active { color: white; }
+nav a span { display: inline-block; width: 28px; color: var(--brass); }
+main { padding: 28px 36px 72px; max-width: 1180px; }
+.banner { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.banner i { font-style: normal; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--muted); }
+section { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 26px 28px 30px; margin: 0 0 22px; scroll-margin-top: 18px; }
+.kicker { color: var(--brass); font-size: 12px; letter-spacing: 0.16em; margin: 0 0 6px; }
+h2 { font-size: 28px; font-weight: 620; margin: 0 0 8px; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 68ch; line-height: 1.65; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 600; color: var(--muted); padding: 8px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid #eee6da; }
+tr.special td:first-child { color: var(--rust); font-weight: 650; }
+.stage { background: white; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.toolbar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: #faf7f2; border-bottom: 1px solid var(--line); }
+button { font: inherit; border: 1px solid #d9d0c3; background: white; color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button.active { background: var(--coal); color: white; border-color: var(--coal); }
+canvas { width: 100%; height: 560px; display: block; background: #fbfaf7; }
+.split { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 18px; align-items: start; }
+img { width: 100%; display: block; background: white; border: 1px solid var(--line); border-radius: 12px; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; }
+.tile b { display: block; font-size: 26px; font-weight: 640; letter-spacing: -0.03em; }
+.tile span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.plan-wrap { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px; }
+svg { width: 100%; height: auto; background: white; border: 1px solid var(--line); border-radius: 12px; }
+#detail { min-height: 148px; white-space: pre-wrap; background: white; border: 1px solid var(--line); border-radius: 12px; padding: 14px; line-height: 1.6; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+figcaption { color: var(--muted); font-size: 12px; margin-top: 6px; }
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  nav { position: relative; height: auto; }
+  .split, .plan-wrap, .pair, .stats, .tiles { grid-template-columns: 1fr; }
+  main { padding: 18px 14px 48px; }
+}
+</style>
+<div class="app">
+<nav>
+  <div class="mark">合成数据演示</div>
+  <h1>4-2 煤层<br>从钻孔到封闭体</h1>
+  <a href="#holes" class="active"><span>01</span>钻孔</a>
+  <a href="#body"><span>02</span>封闭体</a>
+  <a href="#zk05"><span>03</span>夹矸与口径</a>
+  <a href="#section"><span>04</span>参考剖面</a>
+  <a href="#check"><span>05</span>留出与更新</a>
+</nav>
+<main>
+  <div class="banner">
+    <i>不是甲方实测</i>
+    <i>虚构局部坐标</i>
+    <i>竖孔</i>
+    <i>凸包外不外推</i>
+    <i>不是矿井精度</i>
+  </div>
+
+  <section id="holes">
+    <p class="kicker">01</p>
+    <h2>20 个钻孔</h2>
+    <p class="lead">来自合成的 S003。X 是北向，Y 是东向。下表的东、北已经换成模型用的方向。标红的孔是结构、缺失或深度不一致的例子。4-2 封闭体没有 ZK16，因为它没有钻到这一层。</p>
+    <table>
+      <thead><tr><th>孔号</th><th>东 (m)</th><th>北 (m)</th><th>孔口 (m)</th><th>终孔 (m)</th><th>终孔层位</th><th>说明</th></tr></thead>
+      <tbody><tr class=""><td>ZK01</td><td>400</td><td>1000</td><td>1219.37</td><td>510.0</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK02</td><td>600</td><td>1000</td><td>1219.71</td><td>513.28</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK03</td><td>800</td><td>1000</td><td>1220.16</td><td>514.95</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK04</td><td>1000</td><td>1000</td><td>1218.74</td><td>514.2</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class="special"><td>ZK05</td><td>1200</td><td>1000</td><td>1214.32</td><td>511.4</td><td>延安组</td><td>4-2 含夹矸</td></tr>
+<tr class=""><td>ZK06</td><td>400</td><td>1300</td><td>1217.63</td><td>513.6</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class="special"><td>ZK07</td><td>600</td><td>1300</td><td>1209.37</td><td>516.88</td><td>延安组</td><td>留出孔</td></tr>
+<tr class="special"><td>ZK08</td><td>800</td><td>1300</td><td>1209.23</td><td>518.55</td><td>延安组</td><td>两层煤之间丢芯 · 留出孔</td></tr>
+<tr class="special"><td>ZK09</td><td>1000</td><td>1300</td><td>1214.16</td><td>517.8</td><td>延安组</td><td>留出孔</td></tr>
+<tr class=""><td>ZK10</td><td>1200</td><td>1300</td><td>1216.16</td><td>515.0</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK11</td><td>400</td><td>1600</td><td>1218.61</td><td>517.2</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class="special"><td>ZK12</td><td>600</td><td>1600</td><td>1213.49</td><td>520.48</td><td>延安组</td><td>3-1 未见煤 · 留出孔</td></tr>
+<tr class=""><td>ZK13</td><td>800</td><td>1600</td><td>1213.5</td><td>522.15</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK14</td><td>1000</td><td>1600</td><td>1217.83</td><td>521.4</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK15</td><td>1200</td><td>1600</td><td>1218.48</td><td>518.6</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class="special"><td>ZK16</td><td>400</td><td>1900</td><td>1218.21</td><td>403.97</td><td>3-1以下，未钻穿4-2</td><td>未钻穿 4-2，不进 4-2 封闭体</td></tr>
+<tr class=""><td>ZK17</td><td>600</td><td>1900</td><td>1219.81</td><td>524.08</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class=""><td>ZK18</td><td>800</td><td>1900</td><td>1220.29</td><td>525.75</td><td>延安组</td><td>参与 4-2</td></tr>
+<tr class="special"><td>ZK19</td><td>1000</td><td>1900</td><td>1218.57</td><td>525.0</td><td>延安组</td><td>钻探、测井与综合深度不一致</td></tr>
+<tr class=""><td>ZK20</td><td>1200</td><td>1900</td><td>1213.62</td><td>522.2</td><td>延安组</td><td>参与 4-2</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="body">
+    <p class="kicker">02</p>
+    <h2>4-2 封闭体</h2>
+    <p class="lead">顶底板用含矸总厚。平面约 800 米，煤厚约 3 米，真实比例下会扁成一条线。默认把高程放大，只为看清煤层；点真实比例可以回到 1 倍。拖动旋转。深色是顶板，浅色是侧壁，褐面是底板。</p>
+    <div class="stage">
+      <div class="toolbar">
+        <button type="button" id="true-scale" data-factor="1">真实比例</button>
+        <button type="button" id="see-seam" data-factor="18">看清煤厚</button>
+        <span id="scale-note"></span>
+      </div>
+      <canvas id="view" width="960" height="560"></canvas>
+    </div>
+    <figure style="margin-top:16px">
+      <img src="images/plan.png" alt="4-2 底板高程与含矸厚度平面图">
+      <figcaption>左图是底板高程，右图是含矸垂向厚度。颜色按三角网在孔与孔之间线性过渡。西北角缺一块，因为 ZK16 没有钻到 4-2，没有进入这层网。</figcaption>
+    </figure>
+  </section>
+
+  <section id="zk05">
+    <p class="kicker">03</p>
+    <h2>ZK05 的夹矸</h2>
+    <p class="lead">综合栏结构是 0.21（0.25）2.18/2.64。封闭体用 2.64 m 做顶板。2.18 m 是下煤段的储量采用厚度，不改顶板。夹矸只留在这一孔，没有连到邻孔。右图把画布竖向放大 8 倍，米数仍是真值。</p>
+    <div class="split">
+      <figure>
+        <img src="images/zk05_column.png" alt="ZK05 煤矸柱">
+        <figcaption>左为真实厚度比例，右为画布放大。自下而上：煤、夹矸、煤。</figcaption>
+      </figure>
+      <div class="tiles">
+        <div class="tile"><b>2.64 m</b><span>含矸总厚。顶板高程 = 底板高程 + 这个数。</span></div>
+        <div class="tile"><b>2.39 m</b><span>纯煤。0.21 m 与 2.18 m 两段煤相加。</span></div>
+        <div class="tile"><b>0.25 m</b><span>夹矸，炭质泥岩。不向其他孔延伸。</span></div>
+        <div class="tile"><b>2.18 m</b><span>采用厚度，只取下煤段。上段 0.21 m 低于示例线，仍留在柱上。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section">
+    <p class="kicker">04</p>
+    <h2>北 1000 m 的参考剖面</h2>
+    <p class="lead">沿 ZK01 到 ZK05 取一条正东向直线。上图是真实垂向比例，下图高程方向画成 10 倍，用来看清煤厚。3-1 在 4-2 之上。这不是甲方剖面图的恢复，也没有拿来训练。</p>
+    <img src="images/section.png" alt="参考剖面">
+  </section>
+
+  <section id="check">
+    <p class="kicker">05</p>
+    <h2>留出、隐藏、再加回</h2>
+    <p class="lead">同时藏起 ZK07、ZK08、ZK09、ZK12，只给仍落在训练凸包内的点打分。样条的底板误差略低，差距相对 5 米量级很小，封闭体仍用三角网。隐藏 ZK13 是历史记录回放，不是新打的孔。</p>
+    <div class="stats">
+      <div class="tile"><b id="floor-mae"></b><span>四孔留出，三角网底板平均绝对误差</span></div>
+      <div class="tile"><b id="thick-mae"></b><span>四孔留出，含矸厚度平均绝对误差</span></div>
+      <div class="tile"><b id="volume-now"></b><span id="volume-note">当前封闭体体积</span></div>
+    </div>
+    <div class="plan-wrap">
+      <div>
+        <div class="toolbar">
+          <button type="button" id="show-all" class="active">全部钻孔</button>
+          <button type="button" id="hide-one">隐藏 ZK13</button>
+        </div>
+        <svg id="plan" viewBox="0 0 640 560"></svg>
+      </div>
+      <div>
+        <div id="detail">点一个钻孔，查看厚度口径和 S003 单元格。</div>
+        <table id="errors" style="margin-top:12px"></table>
+      </div>
+    </div>
+    <table id="methods" style="margin-top:16px"></table>
+    <div class="pair">
+      <figure>
+        <img src="images/mask_distance.png" alt="采用厚度与到钻孔的距离">
+        <figcaption>左为采用厚度，示例线 0.80 m 不裁煤层。右为到最近钻孔的距离，凸包外留空。</figcaption>
+      </figure>
+      <div class="tile">
+        <b>0.80 m</b>
+        <span>图件上的示例业务线，不是通用可采标准，也不把薄煤做成尖灭。这 19 个控制点的采用厚度都高于它。等厚线和甲方剖面没有进入训练，避免同一批钻孔被算两遍。</span>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<script>
+const data = {"mesh": {"vertices": [[400.0, 1000.0, 789.37], [600.0, 1000.0, 786.43], [800.0, 1000.0, 785.21], [1000.0, 1000.0, 784.54], [1200.0, 1000.0, 782.92], [400.0, 1300.0, 784.03], [600.0, 1300.0, 772.49], [800.0, 1300.0, 770.68], [1000.0, 1300.0, 776.36], [1200.0, 1300.0, 781.16], [400.0, 1600.0, 781.41], [600.0, 1600.0, 773.01], [800.0, 1600.0, 771.35], [1000.0, 1600.0, 776.43], [1200.0, 1600.0, 779.88], [600.0, 1900.0, 775.73], [800.0, 1900.0, 774.54], [1000.0, 1900.0, 773.57], [1200.0, 1900.0, 771.42], [400.0, 1000.0, 791.96], [600.0, 1000.0, 789.23], [800.0, 1000.0, 788.46], [1000.0, 1000.0, 787.59], [1200.0, 1000.0, 785.56], [400.0, 1300.0, 786.71], [600.0, 1300.0, 775.6], [800.0, 1300.0, 773.98], [1000.0, 1300.0, 780.12], [1200.0, 1300.0, 784.46], [400.0, 1600.0, 783.49], [600.0, 1600.0, 775.49], [800.0, 1600.0, 774.96], [1000.0, 1600.0, 779.83], [1200.0, 1600.0, 783.44], [600.0, 1900.0, 777.92], [800.0, 1900.0, 777.15], [1000.0, 1900.0, 776.8], [1200.0, 1900.0, 774.38]], "faces": [[10, 15, 11], [29, 30, 34], [3, 2, 8], [22, 27, 21], [2, 7, 8], [21, 27, 26], [8, 4, 3], [27, 22, 23], [9, 4, 8], [28, 27, 23], [14, 13, 17], [33, 36, 32], [17, 18, 14], [36, 33, 37], [14, 9, 8], [33, 27, 28], [8, 13, 14], [27, 33, 32], [8, 7, 12], [27, 31, 26], [12, 13, 8], [31, 27, 32], [12, 7, 6], [31, 25, 26], [6, 11, 12], [25, 31, 30], [5, 10, 6], [24, 25, 29], [6, 10, 11], [25, 30, 29], [6, 2, 1], [25, 20, 21], [6, 7, 2], [25, 21, 26], [1, 0, 6], [20, 25, 19], [6, 0, 5], [25, 24, 19], [12, 11, 16], [31, 35, 30], [11, 15, 16], [30, 35, 34], [17, 13, 16], [36, 35, 32], [16, 13, 12], [35, 31, 32], [18, 17, 36], [18, 36, 37], [3, 4, 23], [3, 23, 22], [4, 9, 28], [4, 28, 23], [9, 14, 33], [9, 33, 28], [5, 0, 19], [5, 19, 24], [14, 18, 37], [14, 37, 33], [0, 1, 20], [0, 20, 19], [10, 5, 24], [10, 24, 29], [1, 2, 21], [1, 21, 20], [15, 10, 29], [15, 29, 34], [16, 15, 34], [16, 34, 35], [17, 16, 35], [17, 35, 36], [2, 3, 22], [2, 22, 21]], "hole_count": 19, "suggested_factor": 18, "labels": [{"hole_id": "ZK01", "east": 400.0, "north": 1000.0, "z": 791.96}, {"hole_id": "ZK02", "east": 600.0, "north": 1000.0, "z": 789.23}, {"hole_id": "ZK03", "east": 800.0, "north": 1000.0, "z": 788.46}, {"hole_id": "ZK04", "east": 1000.0, "north": 1000.0, "z": 787.59}, {"hole_id": "ZK05", "east": 1200.0, "north": 1000.0, "z": 785.56}, {"hole_id": "ZK06", "east": 400.0, "north": 1300.0, "z": 786.71}, {"hole_id": "ZK07", "east": 600.0, "north": 1300.0, "z": 775.6}, {"hole_id": "ZK08", "east": 800.0, "north": 1300.0, "z": 773.98}, {"hole_id": "ZK09", "east": 1000.0, "north": 1300.0, "z": 780.12}, {"hole_id": "ZK10", "east": 1200.0, "north": 1300.0, "z": 784.46}, {"hole_id": "ZK11", "east": 400.0, "north": 1600.0, "z": 783.49}, {"hole_id": "ZK12", "east": 600.0, "north": 1600.0, "z": 775.49}, {"hole_id": "ZK13", "east": 800.0, "north": 1600.0, "z": 774.96}, {"hole_id": "ZK14", "east": 1000.0, "north": 1600.0, "z": 779.83}, {"hole_id": "ZK15", "east": 1200.0, "north": 1600.0, "z": 783.44}, {"hole_id": "ZK17", "east": 600.0, "north": 1900.0, "z": 777.92}, {"hole_id": "ZK18", "east": 800.0, "north": 1900.0, "z": 777.15}, {"hole_id": "ZK19", "east": 1000.0, "north": 1900.0, "z": 776.8}, {"hole_id": "ZK20", "east": 1200.0, "north": 1900.0, "z": 774.38}]}, "points": [{"hole_id": "ZK01", "east_m": 400.0, "north_m": 1000.0, "floor_z_m": 789.37, "total_with_gangue_m": 2.59, "pure_coal_m": 2.59, "gangue_m": 0.0, "adopted_thickness_m": 2.59, "parting_name": "", "collar_cell": "G2", "source_cells": {"composite_floor_depth": "G7", "composite_structure": "H7", "adopted_thickness": "L7"}, "held_out": false}, {"hole_id": "ZK02", "east_m": 600.0, "north_m": 1000.0, "floor_z_m": 786.43, "total_with_gangue_m": 2.8, "pure_coal_m": 2.8, "gangue_m": 0.0, "adopted_thickness_m": 2.8, "parting_name": "", "collar_cell": "G13", "source_cells": {"composite_floor_depth": "G18", "composite_structure": "H18", "adopted_thickness": "L18"}, "held_out": false}, {"hole_id": "ZK03", "east_m": 800.0, "north_m": 1000.0, "floor_z_m": 785.21, "total_with_gangue_m": 3.25, "pure_coal_m": 3.25, "gangue_m": 0.0, "adopted_thickness_m": 3.25, "parting_name": "", "collar_cell": "G24", "source_cells": {"composite_floor_depth": "G29", "composite_structure": "H29", "adopted_thickness": "L29"}, "held_out": false}, {"hole_id": "ZK04", "east_m": 1000.0, "north_m": 1000.0, "floor_z_m": 784.54, "total_with_gangue_m": 3.05, "pure_coal_m": 3.05, "gangue_m": 0.0, "adopted_thickness_m": 3.05, "parting_name": "", "collar_cell": "G35", "source_cells": {"composite_floor_depth": "G40", "composite_structure": "H40", "adopted_thickness": "L40"}, "held_out": false}, {"hole_id": "ZK05", "east_m": 1200.0, "north_m": 1000.0, "floor_z_m": 782.92, "total_with_gangue_m": 2.64, "pure_coal_m": 2.39, "gangue_m": 0.25, "adopted_thickness_m": 2.18, "parting_name": "炭质泥岩", "collar_cell": "G46", "source_cells": {"composite_floor_depth": "G51", "composite_structure": "H51", "adopted_thickness": "L51"}, "held_out": false}, {"hole_id": "ZK06", "east_m": 400.0, "north_m": 1300.0, "floor_z_m": 784.03, "total_with_gangue_m": 2.68, "pure_coal_m": 2.68, "gangue_m": 0.0, "adopted_thickness_m": 2.68, "parting_name": "", "collar_cell": "G57", "source_cells": {"composite_floor_depth": "G62", "composite_structure": "H62", "adopted_thickness": "L62"}, "held_out": false}, {"hole_id": "ZK07", "east_m": 600.0, "north_m": 1300.0, "floor_z_m": 772.49, "total_with_gangue_m": 3.11, "pure_coal_m": 3.11, "gangue_m": 0.0, "adopted_thickness_m": 3.11, "parting_name": "", "collar_cell": "G68", "source_cells": {"composite_floor_depth": "G73", "composite_structure": "H73", "adopted_thickness": "L73"}, "held_out": true}, {"hole_id": "ZK08", "east_m": 800.0, "north_m": 1300.0, "floor_z_m": 770.68, "total_with_gangue_m": 3.3, "pure_coal_m": 3.3, "gangue_m": 0.0, "adopted_thickness_m": 3.3, "parting_name": "", "collar_cell": "G79", "source_cells": {"composite_floor_depth": "G85", "composite_structure": "H85", "adopted_thickness": "L85"}, "held_out": true}, {"hole_id": "ZK09", "east_m": 1000.0, "north_m": 1300.0, "floor_z_m": 776.36, "total_with_gangue_m": 3.76, "pure_coal_m": 3.76, "gangue_m": 0.0, "adopted_thickness_m": 3.76, "parting_name": "", "collar_cell": "G91", "source_cells": {"composite_floor_depth": "G96", "composite_structure": "H96", "adopted_thickness": "L96"}, "held_out": true}, {"hole_id": "ZK10", "east_m": 1200.0, "north_m": 1300.0, "floor_z_m": 781.16, "total_with_gangue_m": 3.3, "pure_coal_m": 3.3, "gangue_m": 0.0, "adopted_thickness_m": 3.3, "parting_name": "", "collar_cell": "G102", "source_cells": {"composite_floor_depth": "G107", "composite_structure": "H107", "adopted_thickness": "L107"}, "held_out": false}, {"hole_id": "ZK11", "east_m": 400.0, "north_m": 1600.0, "floor_z_m": 781.41, "total_with_gangue_m": 2.08, "pure_coal_m": 2.08, "gangue_m": 0.0, "adopted_thickness_m": 2.08, "parting_name": "", "collar_cell": "G113", "source_cells": {"composite_floor_depth": "G118", "composite_structure": "H118", "adopted_thickness": "L118"}, "held_out": false}, {"hole_id": "ZK12", "east_m": 600.0, "north_m": 1600.0, "floor_z_m": 773.01, "total_with_gangue_m": 2.48, "pure_coal_m": 2.48, "gangue_m": 0.0, "adopted_thickness_m": 2.48, "parting_name": "", "collar_cell": "G124", "source_cells": {"composite_floor_depth": "G129", "composite_structure": "H129", "adopted_thickness": "L129"}, "held_out": true}, {"hole_id": "ZK13", "east_m": 800.0, "north_m": 1600.0, "floor_z_m": 771.35, "total_with_gangue_m": 3.61, "pure_coal_m": 3.61, "gangue_m": 0.0, "adopted_thickness_m": 3.61, "parting_name": "", "collar_cell": "G135", "source_cells": {"composite_floor_depth": "G140", "composite_structure": "H140", "adopted_thickness": "L140"}, "held_out": false}, {"hole_id": "ZK14", "east_m": 1000.0, "north_m": 1600.0, "floor_z_m": 776.43, "total_with_gangue_m": 3.4, "pure_coal_m": 3.4, "gangue_m": 0.0, "adopted_thickness_m": 3.4, "parting_name": "", "collar_cell": "G146", "source_cells": {"composite_floor_depth": "G151", "composite_structure": "H151", "adopted_thickness": "L151"}, "held_out": false}, {"hole_id": "ZK15", "east_m": 1200.0, "north_m": 1600.0, "floor_z_m": 779.88, "total_with_gangue_m": 3.56, "pure_coal_m": 3.56, "gangue_m": 0.0, "adopted_thickness_m": 3.56, "parting_name": "", "collar_cell": "G157", "source_cells": {"composite_floor_depth": "G162", "composite_structure": "H162", "adopted_thickness": "L162"}, "held_out": false}, {"hole_id": "ZK17", "east_m": 600.0, "north_m": 1900.0, "floor_z_m": 775.73, "total_with_gangue_m": 2.19, "pure_coal_m": 2.19, "gangue_m": 0.0, "adopted_thickness_m": 2.19, "parting_name": "", "collar_cell": "G177", "source_cells": {"composite_floor_depth": "G182", "composite_structure": "H182", "adopted_thickness": "L182"}, "held_out": false}, {"hole_id": "ZK18", "east_m": 800.0, "north_m": 1900.0, "floor_z_m": 774.54, "total_with_gangue_m": 2.61, "pure_coal_m": 2.61, "gangue_m": 0.0, "adopted_thickness_m": 2.61, "parting_name": "", "collar_cell": "G188", "source_cells": {"composite_floor_depth": "G193", "composite_structure": "H193", "adopted_thickness": "L193"}, "held_out": false}, {"hole_id": "ZK19", "east_m": 1000.0, "north_m": 1900.0, "floor_z_m": 773.57, "total_with_gangue_m": 3.23, "pure_coal_m": 3.23, "gangue_m": 0.0, "adopted_thickness_m": 3.23, "parting_name": "", "collar_cell": "G199", "source_cells": {"composite_floor_depth": "G204", "composite_structure": "H204", "adopted_thickness": "L204"}, "held_out": false}, {"hole_id": "ZK20", "east_m": 1200.0, "north_m": 1900.0, "floor_z_m": 771.42, "total_with_gangue_m": 2.96, "pure_coal_m": 2.96, "gangue_m": 0.0, "adopted_thickness_m": 2.96, "parting_name": "", "collar_cell": "G210", "source_cells": {"composite_floor_depth": "G215", "composite_structure": "H215", "adopted_thickness": "L215"}, "held_out": false}], "full_triangles": [[[400.0, 1600.0], [600.0, 1600.0], [600.0, 1900.0]], [[1000.0, 1000.0], [1000.0, 1300.0], [800.0, 1000.0]], [[800.0, 1000.0], [1000.0, 1300.0], [800.0, 1300.0]], [[1000.0, 1300.0], [1000.0, 1000.0], [1200.0, 1000.0]], [[1200.0, 1300.0], [1000.0, 1300.0], [1200.0, 1000.0]], [[1200.0, 1600.0], [1000.0, 1900.0], [1000.0, 1600.0]], [[1000.0, 1900.0], [1200.0, 1600.0], [1200.0, 1900.0]], [[1200.0, 1600.0], [1000.0, 1300.0], [1200.0, 1300.0]], [[1000.0, 1300.0], [1200.0, 1600.0], [1000.0, 1600.0]], [[1000.0, 1300.0], [800.0, 1600.0], [800.0, 1300.0]], [[800.0, 1600.0], [1000.0, 1300.0], [1000.0, 1600.0]], [[800.0, 1600.0], [600.0, 1300.0], [800.0, 1300.0]], [[600.0, 1300.0], [800.0, 1600.0], [600.0, 1600.0]], [[400.0, 1300.0], [600.0, 1300.0], [400.0, 1600.0]], [[600.0, 1300.0], [600.0, 1600.0], [400.0, 1600.0]], [[600.0, 1300.0], [600.0, 1000.0], [800.0, 1000.0]], [[600.0, 1300.0], [800.0, 1000.0], [800.0, 1300.0]], [[600.0, 1000.0], [600.0, 1300.0], [400.0, 1000.0]], [[600.0, 1300.0], [400.0, 1300.0], [400.0, 1000.0]], [[800.0, 1600.0], [800.0, 1900.0], [600.0, 1600.0]], [[600.0, 1600.0], [800.0, 1900.0], [600.0, 1900.0]], [[1000.0, 1900.0], [800.0, 1900.0], [1000.0, 1600.0]], [[800.0, 1900.0], [800.0, 1600.0], [1000.0, 1600.0]]], "hidden_triangles": [[[1000.0, 1600.0], [600.0, 1600.0], [800.0, 1300.0]], [[400.0, 1600.0], [600.0, 1600.0], [600.0, 1900.0]], [[1000.0, 1300.0], [1000.0, 1600.0], [800.0, 1300.0]], [[600.0, 1600.0], [600.0, 1300.0], [800.0, 1300.0]], [[1000.0, 1900.0], [800.0, 1900.0], [1000.0, 1600.0]], [[800.0, 1900.0], [600.0, 1600.0], [1000.0, 1600.0]], [[600.0, 1600.0], [800.0, 1900.0], [600.0, 1900.0]], [[1000.0, 1000.0], [1000.0, 1300.0], [800.0, 1000.0]], [[800.0, 1000.0], [1000.0, 1300.0], [800.0, 1300.0]], [[1000.0, 1300.0], [1000.0, 1000.0], [1200.0, 1000.0]], [[1200.0, 1300.0], [1000.0, 1300.0], [1200.0, 1000.0]], [[1200.0, 1600.0], [1000.0, 1900.0], [1000.0, 1600.0]], [[1000.0, 1900.0], [1200.0, 1600.0], [1200.0, 1900.0]], [[1200.0, 1600.0], [1000.0, 1300.0], [1200.0, 1300.0]], [[1000.0, 1300.0], [1200.0, 1600.0], [1000.0, 1600.0]], [[600.0, 1300.0], [600.0, 1600.0], [400.0, 1600.0]], [[400.0, 1300.0], [600.0, 1300.0], [400.0, 1600.0]], [[600.0, 1300.0], [600.0, 1000.0], [800.0, 1000.0]], [[600.0, 1300.0], [800.0, 1000.0], [800.0, 1300.0]], [[600.0, 1000.0], [600.0, 1300.0], [400.0, 1000.0]], [[600.0, 1300.0], [400.0, 1300.0], [400.0, 1000.0]]], "holdout_rows": [{"hole_id": "ZK07", "coverage": "凸包内", "actual_floor_z_m": 772.49, "predicted_floor_z_m": 781.155, "floor_error_m": 8.665, "actual_thickness_m": 3.11, "predicted_thickness_m": 3.055, "thickness_error_m": -0.055}, {"hole_id": "ZK08", "coverage": "凸包内", "actual_floor_z_m": 770.68, "predicted_floor_z_m": 778.28, "floor_error_m": 7.6, "actual_thickness_m": 3.3, "predicted_thickness_m": 3.43, "thickness_error_m": 0.13}, {"hole_id": "ZK09", "coverage": "凸包内", "actual_floor_z_m": 776.36, "predicted_floor_z_m": 779.72, "floor_error_m": 3.36, "actual_thickness_m": 3.76, "predicted_thickness_m": 3.365, "thickness_error_m": -0.395}, {"hole_id": "ZK12", "coverage": "凸包内", "actual_floor_z_m": 773.01, "predicted_floor_z_m": 776.38, "floor_error_m": 3.37, "actual_thickness_m": 2.48, "predicted_thickness_m": 2.845, "thickness_error_m": 0.365}], "floor": {"count": 4, "mae_m": 5.74875, "rmse_m": 6.234756, "max_abs_m": 8.665}, "thickness": {"count": 4, "mae_m": 0.23625, "rmse_m": 0.278018, "max_abs_m": 0.395}, "methods": [{"name": "线性三角网", "floor_mae_m": 5.74875, "thickness_mae_m": 0.23625, "loo_floor_mae_m": 1.721786}, {"name": "局部薄板样条", "floor_mae_m": 5.533525, "thickness_mae_m": 0.251425, "loo_floor_mae_m": 1.575434}, {"name": "线性漂移克里金", "floor_mae_m": 7.220735, "thickness_mae_m": 0.323364, "loo_floor_mae_m": 2.643183}], "zk13": {"hole_id": "ZK13", "full_volume_m3": 2142900.0, "reduced_volume_m3": 2100000.0, "volume_change_m3": 42900.0, "note": "先隐藏再加入是历史记录回放，不是新打的钻孔。", "coverage": "凸包内", "floor_error_m": 3.37, "thickness_error_m": -0.67}, "holdouts": ["ZK07", "ZK08", "ZK09", "ZK12"]};
+const mesh = data.mesh;
+const canvas = document.getElementById("view");
+const ctx = canvas.getContext("2d");
+const note = document.getElementById("scale-note");
+let yaw = -0.7, pitch = -0.55, drag = null, factor = mesh.suggested_factor;
+const raw = mesh.vertices.map(v => [v[0], v[2], v[1]]);
+const origin = raw.reduce((s, v) => [s[0] + v[0], s[1] + v[1], s[2] + v[2]], [0, 0, 0]).map(v => v / raw.length);
+function project(v) {
+  const x = v[0] - origin[0], y = (v[1] - origin[1]) * factor, z = v[2] - origin[2];
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const x1 = cy * x + sy * z, z1 = -sy * x + cy * z;
+  const y1 = cp * y - sp * z1, z2 = sp * y + cp * z1;
+  const perspective = 1400 / (1400 + z2);
+  return {px: x1 * perspective, py: y1 * perspective, z: z2, x: x1, y: y1};
+}
+function frame() {
+  const width = canvas.width, height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+  const placed = raw.map(project);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  placed.forEach(p => {
+    minX = Math.min(minX, p.px); maxX = Math.max(maxX, p.px);
+    minY = Math.min(minY, p.py); maxY = Math.max(maxY, p.py);
+  });
+  const fit = Math.min((width - 70) / (maxX - minX || 1), (height - 70) / (maxY - minY || 1));
+  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
+  const screen = placed.map(p => [width / 2 + (p.px - midX) * fit, height / 2 - (p.py - midY) * fit]);
+  mesh.faces.map(face => {
+    const a = placed[face[0]], b = placed[face[1]], c = placed[face[2]];
+    const nz = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    return {face, depth: (a.z + b.z + c.z) / 3, nz};
+  }).filter(item => item.nz > 0).sort((a, b) => b.depth - a.depth).forEach(item => {
+    const face = item.face;
+    const roof = face.every(index => index >= mesh.hole_count);
+    const floor = face.every(index => index < mesh.hole_count);
+    ctx.beginPath();
+    ctx.moveTo(screen[face[0]][0], screen[face[0]][1]);
+    ctx.lineTo(screen[face[1]][0], screen[face[1]][1]);
+    ctx.lineTo(screen[face[2]][0], screen[face[2]][1]);
+    ctx.closePath();
+    ctx.fillStyle = roof ? "#3b2a1d" : floor ? "#c4a574" : "#f6efe2";
+    ctx.strokeStyle = roof ? "#24180f" : floor ? "#8a6234" : "#8d6b3f";
+    ctx.lineWidth = 0.7;
+    ctx.fill();
+    ctx.stroke();
+  });
+  ctx.fillStyle = "#1c1915";
+  ctx.font = "12px Microsoft YaHei";
+  mesh.labels.forEach(label => {
+    const p = project([label.east, label.z, label.north]);
+    ctx.fillText(label.hole_id, width / 2 + (p.px - midX) * fit + 4, height / 2 - (p.py - midY) * fit);
+  });
+  note.textContent = factor === 1 ? "当前是真实比例。" : "当前垂向夸张 " + factor + " 倍。实际米数不变。";
+  document.querySelectorAll("[data-factor]").forEach(button => {
+    button.classList.toggle("active", Number(button.dataset.factor) === factor);
+  });
+}
+document.getElementById("see-seam").dataset.factor = String(mesh.suggested_factor);
+document.querySelectorAll("[data-factor]").forEach(button => {
+  button.addEventListener("click", () => { factor = Number(button.dataset.factor); frame(); });
+});
+canvas.onmousedown = event => { drag = [event.clientX, event.clientY, yaw, pitch]; };
+window.onmouseup = () => { drag = null; };
+window.onmousemove = event => {
+  if (!drag) return;
+  yaw = drag[2] + (event.clientX - drag[0]) * 0.008;
+  pitch = Math.max(-1.2, Math.min(1.2, drag[3] + (event.clientY - drag[1]) * 0.008));
+  frame();
+};
+function fitCanvas() {
+  const width = Math.max(640, Math.floor(canvas.parentElement.clientWidth));
+  canvas.width = width;
+  canvas.height = 560;
+  frame();
+}
+fitCanvas();
+window.addEventListener("resize", fitCanvas);
+
+const svg = document.getElementById("plan");
+const easts = data.points.map(point => point.east_m);
+const norths = data.points.map(point => point.north_m);
+const minX = Math.min(...easts) - 50, maxX = Math.max(...easts) + 50;
+const minY = Math.min(...norths) - 50, maxY = Math.max(...norths) + 50;
+const sx = value => (value - minX) / (maxX - minX) * 600 + 20;
+const sy = value => 540 - (value - minY) / (maxY - minY) * 500;
+let hidden = false;
+function meters(value) { return Math.round(value).toLocaleString("zh-CN") + " m³"; }
+function drawPlan() {
+  const triangles = hidden ? data.hidden_triangles : data.full_triangles;
+  svg.innerHTML = "";
+  triangles.forEach(tri => {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    node.setAttribute("points", tri.map(pair => sx(pair[0]) + "," + sy(pair[1])).join(" "));
+    node.setAttribute("fill", "#f6f1e6");
+    node.setAttribute("stroke", "#c3aa8a");
+    svg.appendChild(node);
+  });
+  data.points.forEach(point => {
+    if (hidden && point.hole_id === "ZK13") return;
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("cx", sx(point.east_m));
+    dot.setAttribute("cy", sy(point.north_m));
+    dot.setAttribute("r", point.hole_id === "ZK05" || point.held_out ? 7 : 5);
+    dot.setAttribute("fill", point.hole_id === "ZK05" ? "#8c3b22" : point.held_out ? "#9a6230" : "#241c16");
+    dot.style.cursor = "pointer";
+    dot.onclick = () => showPoint(point);
+    svg.appendChild(dot);
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", sx(point.east_m) + 8);
+    label.setAttribute("y", sy(point.north_m) - 6);
+    label.setAttribute("font-size", "12");
+    label.setAttribute("fill", "#1c1915");
+    label.textContent = point.hole_id;
+    svg.appendChild(label);
+  });
+  const volume = hidden ? data.zk13.reduced_volume_m3 : data.zk13.full_volume_m3;
+  document.getElementById("volume-now").textContent = meters(volume);
+  document.getElementById("volume-note").textContent = hidden
+    ? "藏起 ZK13 后的体积。底板误差 " + data.zk13.floor_error_m + " m，它仍在凸包内。"
+    : "19 个孔都在时的 4-2 体积。";
+  document.getElementById("show-all").classList.toggle("active", !hidden);
+  document.getElementById("hide-one").classList.toggle("active", hidden);
+}
+function showPoint(point) {
+  const cells = point.source_cells;
+  document.getElementById("detail").textContent =
+    point.hole_id + " · 4-2\n" +
+    "底板高程 " + point.floor_z_m + " m\n" +
+    "含矸总厚 " + point.total_with_gangue_m + " m，纯煤 " + point.pure_coal_m + " m，夹矸 " + point.gangue_m + " m\n" +
+    "采用厚度 " + point.adopted_thickness_m + " m" + (point.parting_name ? "，" + point.parting_name : "") + "\n" +
+    "孔口 " + point.collar_cell + "，综合底板 " + cells.composite_floor_depth + "，结构 " + cells.composite_structure + "，采用厚度 " + cells.adopted_thickness;
+}
+document.getElementById("show-all").onclick = () => { hidden = false; drawPlan(); };
+document.getElementById("hide-one").onclick = () => { hidden = true; drawPlan(); };
+document.getElementById("floor-mae").textContent = data.floor.mae_m.toFixed(2) + " m";
+document.getElementById("thick-mae").textContent = data.thickness.mae_m.toFixed(2) + " m";
+const errorTable = document.getElementById("errors");
+errorTable.innerHTML = "<tr><th>留出孔</th><th>底板误差 (m)</th><th>厚度误差 (m)</th></tr>" +
+  data.holdout_rows.map(row => "<tr><td>" + row.hole_id + "</td><td>" + row.floor_error_m + "</td><td>" + row.thickness_error_m + "</td></tr>").join("");
+document.getElementById("methods").innerHTML = "<tr><th>初值</th><th>四孔底板 MAE (m)</th><th>四孔厚度 MAE (m)</th><th>逐孔底板 MAE (m)</th></tr>" +
+  data.methods.map(item => "<tr><td>" + item.name + "</td><td>" + item.floor_mae_m.toFixed(2) + "</td><td>" + item.thickness_mae_m.toFixed(2) + "</td><td>" + item.loo_floor_mae_m.toFixed(2) + "</td></tr>").join("");
+drawPlan();
+
+const links = [...document.querySelectorAll("nav a")];
+const sections = links.map(link => document.querySelector(link.getAttribute("href")));
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === "#" + entry.target.id));
+  });
+}, {rootMargin: "-20% 0px -60% 0px"});
+sections.forEach(section => spy.observe(section));
+</script>
